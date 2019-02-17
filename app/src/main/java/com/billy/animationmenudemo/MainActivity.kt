@@ -10,6 +10,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        AnimationMenu(menu_fab)
+        AnimationMenu(menu_fab, btn_layout)
     }
 }
