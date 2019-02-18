@@ -10,6 +10,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        AnimationMenu(menu_fab, btn_layout)
+        animation_menu
+//        var animationMenu = AnimationMenu1(this, menu_fab, ringView, object : AnimationMenu1.MenuListener{
+//            override fun menuExpand() {
+//
+//            }
+//
+//            override fun menuClosed() {
+//
+//            }
+//        })
+
+
+
+
     }
 }
