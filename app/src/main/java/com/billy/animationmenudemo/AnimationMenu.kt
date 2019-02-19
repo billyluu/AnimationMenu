@@ -1,5 +1,7 @@
 package com.billy.animationmenudemo
 
+import android.animation.Animator
+import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.res.ColorStateList
@@ -9,6 +11,8 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.animation_menu.view.*
 
@@ -22,7 +26,7 @@ class AnimationMenu: FrameLayout {
 
     private val END_POSITION = 240
     private val DURATION: Long = 200
-    private var isClicked = false
+    private var isOpen = false
 
     private val mButtons = java.util.ArrayList<View>()
     private val mButtonRect = Rect()
@@ -93,8 +97,8 @@ class AnimationMenu: FrameLayout {
             resources.getInteger(android.R.integer.config_mediumAnimTime))
 
         val density = context.getResources().getDisplayMetrics().density
-        val defaultDistance = DEFAULT_DISTANCE * density;
-        mDistance = typedArray.getDimension(R.styleable.AnimationMenu_distance, defaultDistance);
+        val defaultDistance = DEFAULT_DISTANCE * density
+        mDistance = typedArray.getDimension(R.styleable.AnimationMenu_distance, defaultDistance)
 
 
         initLayout(context)
@@ -137,33 +141,17 @@ class AnimationMenu: FrameLayout {
 
     private fun initMenu() {
         menu_fab.setOnClickListener {
-            if (!isClicked) {
-                var y = menu_fab.translationY
-                var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y - END_POSITION)
-                animator.duration = DURATION
-                animator.start()
-                isClicked = true
-                menu_fab.setImageResource(R.drawable.ic_close)
-                //menuListener.menuExpand()
-                Log.i(TAG, "${menu_fab.x}, ${menu_fab.y - END_POSITION}")
-                //initButtons(context, 6, menu_fab.x, menu_fab.y)
-                Log.i(TAG, "x: ${menu_fab.x}, y:${menu_fab.y}")
-
-                val buttonNumber = mButtons.indexOf(menu_fab) + 1
-                val stepAngle = 360f / mButtons.size
-                val rOStartAngle = 270 - stepAngle + stepAngle * buttonNumber
-                val rStartAngle = if (rOStartAngle > 360) rOStartAngle % 360 else rOStartAngle
-
-                ringView.setStartAngle(rStartAngle)
+            var animator = if (!isOpen) {
+                menuOpenAnimation()
             } else {
-                var y = menu_fab.translationY
-                var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
-                animator.duration = DURATION
-                animator.start()
-                isClicked = false
-                menu_fab.setImageResource(R.drawable.ic_menu)
-                //menuListener.menuClosed()
+                menuCloseAnimation()
             }
+
+            animator.start()
+
+
+
+
         }
 
         ringView.x = menu_fab.x
@@ -179,13 +167,58 @@ class AnimationMenu: FrameLayout {
             button.isClickable = true
 //            button.setOnClickListener(OnButtonClickListener())
 //            button.setOnLongClickListener(OnButtonLongClickListener())
-            button.scaleX = 0f
-            button.scaleY = 0f
+            button.scaleX = 1f
+            button.scaleY = 1f
             button.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
 
             addView(button)
             mButtons.add(button)
         }
+    }
+
+    private fun offsetAndScaleButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float, scale: Float) {
+        var i = 0
+        val cnt = mButtons.size
+        while (i < cnt) {
+            val angle = angleStep * i - 90
+
+            val x = Math.cos(Math.toRadians(angle.toDouble())).toFloat() * offset
+            val y = Math.sin(Math.toRadians(angle.toDouble())).toFloat() * offset
+            val button = mButtons[i]
+            button.x = centerX + x
+            button.y = centerY + y
+            button.scaleX = 1.0f * scale
+            button.scaleY = 1.0f * scale
+            i++
+        }
+    }
+
+    private fun menuOpenAnimation(): Animator {
+        menu_fab.setImageResource(R.drawable.ic_close)
+        var y = menu_fab.translationY
+        var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y - END_POSITION)
+        animator.duration = DURATION
+        isOpen = true
+
+
+        var result = AnimatorSet()
+        result.play(animator)
+
+        return result
+
+    }
+
+    private fun menuCloseAnimation(): Animator {
+        menu_fab.setImageResource(R.drawable.ic_menu)
+        var y = menu_fab.translationY
+        var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
+        animator.duration = DURATION
+        isOpen = false
+
+        var result = AnimatorSet()
+        result.play(animator)
+
+        return result
     }
 }
