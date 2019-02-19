@@ -17,6 +17,7 @@ import android.view.animation.AnimationSet
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import kotlinx.android.synthetic.main.animation_menu.view.*
+import kotlin.math.E
 
 class AnimationMenu: FrameLayout {
     private val TAG = javaClass.simpleName
@@ -24,17 +25,14 @@ class AnimationMenu: FrameLayout {
     private val DEFAULT_BUTTON_SIZE = 56
     private val DEFAULT_DISTANCE = DEFAULT_BUTTON_SIZE * 1.5f
     private val DEFAULT_RING_SCALE_RATIO = 1.3f
-    private val DEFAULT_CLOSE_ICON_ALPHA = 0.3f
 
     private val END_POSITION = 240
     private val DURATION: Long = 200
     private var isOpen = false
+    private var isAnimating = false
 
     private val mButtons = java.util.ArrayList<View>()
-    private val mButtonRect = Rect()
 
-    private var mIconMenu: Int = 0
-    private var mIconClose: Int = 0
     private var mDurationRing: Int = 0
     private var mLongClickDurationRing: Int = 0
     private var mDurationOpen: Int = 0
@@ -43,18 +41,15 @@ class AnimationMenu: FrameLayout {
     private var mRingRadius: Int = 0
     private var mDistance: Float = 0.toFloat()
 
+    private var menuXY = FloatArray(2)
 
     constructor(context: Context): this(context, null) {
         initLayout(context)
         initMenu()
-        Log.i(TAG, "1")
     }
     constructor(context: Context, attrs: AttributeSet?): this(context, attrs, 0)
 
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr) {
-
-
-        val menuButtonColor: Int
         val icons: MutableList<Int>
         val colors: MutableList<Int>
 
@@ -105,7 +100,14 @@ class AnimationMenu: FrameLayout {
 
         initLayout(context)
         initMenu()
+
+        menuXY[0] = menu_fab.x
+        menuXY[1] = menu_fab.y
+
         initButtons(context, icons, colors)
+
+
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -137,7 +139,11 @@ class AnimationMenu: FrameLayout {
 
     private fun initMenu() {
         menu_fab.setOnClickListener {
-            var animator = if (!isOpen) {
+            if (isAnimating) {
+                return@setOnClickListener
+            }
+
+            val animator = if (!isOpen) {
                 menuOpenAnimation()
             } else {
                 menuCloseAnimation()
@@ -156,8 +162,10 @@ class AnimationMenu: FrameLayout {
             button.isClickable = true
 //            button.setOnClickListener(OnButtonClickListener())
 //            button.setOnLongClickListener(OnButtonLongClickListener())
-            button.scaleX = 0f
-            button.scaleY = 0f
+            button.scaleX = 0.8f
+            button.scaleY = 0.8f
+            button.x = menuXY[0]
+            button.y = menuXY[1] - END_POSITION
             button.layoutParams =
                 FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
 
@@ -166,7 +174,94 @@ class AnimationMenu: FrameLayout {
         }
     }
 
-    private fun offsetAndScaleButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float, scale: Float) {
+
+
+    private fun menuOpenAnimation(): Animator {
+        menu_fab.setImageResource(R.drawable.ic_close)
+        val y = menu_fab.translationY
+        val animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y - END_POSITION)
+        animator.duration = DURATION
+
+
+        val btnAnimator = ValueAnimator.ofFloat(0f, mDistance)
+        btnAnimator.duration = 450
+        //btnAnimator.interpolator = OvershootInterpolator()
+        btnAnimator.addUpdateListener {
+            val value = it.animatedValue as Float
+            val angle = 360f / mButtons.size
+            openButtons(menu_fab.x, menu_fab.y, angle, value)
+
+        }
+
+        val result = AnimatorSet()
+        result.playTogether(animator, btnAnimator)
+        result.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {
+                isAnimating = true
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                isAnimating = false
+                for (view in mButtons) {
+                    Log.i(TAG, "open: ${view.id}: ${view.x}, ${view.y}")
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+
+            }
+
+            override fun onAnimationRepeat(animation: Animator?) {
+
+            }
+        })
+        isOpen = true
+        return result
+    }
+
+    private fun menuCloseAnimation(): Animator {
+        menu_fab.setImageResource(R.drawable.ic_menu)
+        val y = menu_fab.translationY
+        val animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
+        animator.duration = DURATION
+
+
+        val btnAnimator = ValueAnimator.ofFloat(mDistance, 0f)
+        btnAnimator.duration = 450
+        btnAnimator.addUpdateListener {
+            val value = it.animatedValue as Float
+            val angle = 360f / mButtons.size
+            closeButtons(menu_fab.x, menu_fab.y, angle, value)
+            //Log.i(TAG,"value ${ it.animatedValue}")
+        }
+
+        val result = AnimatorSet()
+        result.playTogether(animator, btnAnimator)
+        result.addListener(object : Animator.AnimatorListener {
+            override fun onAnimationStart(animation: Animator?) {
+                isAnimating = true
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                isAnimating = false
+                for (view in mButtons) {
+                    Log.i(TAG, "close: ${view.id}: ${view.x}, ${view.y}")
+                }
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+
+            }
+
+            override fun onAnimationRepeat(animation: Animator?) {
+
+            }
+        })
+        isOpen = false
+        return result
+    }
+
+    private fun openButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float) {
         var i = 0
         val cnt = mButtons.size
         while (i < cnt) {
@@ -177,64 +272,27 @@ class AnimationMenu: FrameLayout {
             val button = mButtons[i]
             button.x = centerX + x
             button.y = centerY + y
-            button.scaleX = 1.0f * scale
-            button.scaleY = 1.0f * scale
+            button.scaleX = 0.8f
+            button.scaleY = 0.8f
             i++
         }
     }
 
-    private fun closeOffsetAndScaleButtons(centerX: Float, centerY: Float) {
+    private fun closeButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float) {
+
         var i = 0
         val cnt = mButtons.size
         while (i < cnt) {
+            val angle = angleStep * i - 90
+            val x = Math.cos(Math.toRadians(angle.toDouble())).toFloat() * offset
+            val y = Math.sin(Math.toRadians(angle.toDouble())).toFloat() * offset
+
             val button = mButtons[i]
             button.x = centerX
-            button.y = centerY
+            button.y = centerY - END_POSITION
             button.scaleX = 0f
             button.scaleY = 0f
             i++
         }
-    }
-
-    private fun menuOpenAnimation(): Animator {
-        menu_fab.setImageResource(R.drawable.ic_close)
-        var y = menu_fab.translationY
-        var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y - END_POSITION)
-        animator.duration = DURATION
-        isOpen = true
-
-        var btnAnimator = ValueAnimator.ofFloat(0f, mDistance)
-        btnAnimator.interpolator = OvershootInterpolator()
-        btnAnimator.addUpdateListener {
-            var fraction = it.animatedFraction
-            var value = it.animatedValue as Float
-            var angle = 360f / mButtons.size
-            offsetAndScaleButtons(menu_fab.x, menu_fab.y, angle, value, fraction)
-
-        }
-
-        var result = AnimatorSet()
-        result.playTogether(animator, btnAnimator)
-
-        return result
-    }
-
-    private fun menuCloseAnimation(): Animator {
-        menu_fab.setImageResource(R.drawable.ic_menu)
-        var y = menu_fab.translationY
-        var animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
-        animator.duration = DURATION
-        isOpen = false
-
-        var btnAnimator = ValueAnimator.ofFloat(mDistance, 0f)
-        btnAnimator.interpolator = OvershootInterpolator()
-        btnAnimator.addUpdateListener {
-            closeOffsetAndScaleButtons(menu_fab.x, menu_fab.y)
-        }
-
-        var result = AnimatorSet()
-        result.play(btnAnimator).before(animator)
-
-        return result
     }
 }
