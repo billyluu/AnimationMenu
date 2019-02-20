@@ -196,7 +196,7 @@ class AnimationMenu: FrameLayout {
 
 
         val btnAnimator = ValueAnimator.ofFloat(0f, mDistance)
-        btnAnimator.duration = 450
+        btnAnimator.duration = 400
         btnAnimator.addUpdateListener {
             val value = it.animatedValue as Float
             val angle = 360f / mButtons.size
@@ -230,7 +230,7 @@ class AnimationMenu: FrameLayout {
     private fun menuCloseAnimation(): Animator {
 
         val btnAnimator = ValueAnimator.ofFloat(mDistance, 0f)
-        btnAnimator.duration = DURATION
+        btnAnimator.duration = 400
         btnAnimator.addUpdateListener {
             val value = it.animatedValue as Float
             val angle = 360f / mButtons.size
@@ -245,7 +245,7 @@ class AnimationMenu: FrameLayout {
 
 
         val result = AnimatorSet()
-        result.play(btnAnimator).before(animator)
+        result.play(btnAnimator)
         result.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {
                 isAnimating = true
@@ -255,6 +255,7 @@ class AnimationMenu: FrameLayout {
                 isAnimating = false
                 isOpen = false
                 hideButtons()
+                animator.start()
 
             }
 
@@ -266,6 +267,25 @@ class AnimationMenu: FrameLayout {
 
             }
         })
+//        result.play(animator)
+//        result.addListener(object : Animator.AnimatorListener {
+//            override fun onAnimationStart(animation: Animator?) {
+//                isAnimating = true
+//            }
+//
+//            override fun onAnimationEnd(animation: Animator?) {
+//                isAnimating = false
+//                isOpen = false
+//            }
+//
+//            override fun onAnimationCancel(animation: Animator?) {
+//
+//            }
+//
+//            override fun onAnimationRepeat(animation: Animator?) {
+//
+//            }
+//        })
 
         return result
     }
