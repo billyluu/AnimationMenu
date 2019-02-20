@@ -20,9 +20,5 @@ class MainActivity : AppCompatActivity() {
                 toast(name)
             }
         })
-
-
-
-
     }
 }
