@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
+import android.content.ComponentCallbacks
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Rect
@@ -43,6 +44,8 @@ class AnimationMenu: FrameLayout {
 
     private var menuXY = FloatArray(2)
 
+    private lateinit var onSubButtonClick: OnSubButtonClick
+
     constructor(context: Context): this(context, null) {
         initLayout(context)
         initMenu()
@@ -52,6 +55,7 @@ class AnimationMenu: FrameLayout {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int): super(context, attrs, defStyleAttr) {
         val icons: MutableList<Int>
         val colors: MutableList<Int>
+        val names: MutableList<String>
 
         if (attrs == null) {
             throw IllegalArgumentException("No buttons icons or colors set")
@@ -60,18 +64,23 @@ class AnimationMenu: FrameLayout {
         val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.AnimationMenu, 0, 0)
         val iconArrayId = typedArray.getResourceId(R.styleable.AnimationMenu_button_icons, 0)
         val colorArrayId = typedArray.getResourceId(R.styleable.AnimationMenu_button_colors, 0)
+        val btnNameArrayId = typedArray.getResourceId(R.styleable.AnimationMenu_button_name, 0)
 
         val iconsIds = resources.obtainTypedArray(iconArrayId)
         try {
             val colorsIds = resources.getIntArray(colorArrayId)
             val buttonsCount = Math.min(iconsIds.length(), colorsIds.size)
+            val namesArray = resources.getStringArray(btnNameArrayId)
 
             icons = ArrayList(buttonsCount)
             colors = ArrayList(buttonsCount)
+            names = ArrayList(buttonsCount)
+
 
             for (i in 0 until buttonsCount) {
-                icons.add(iconsIds.getResourceId(i, -1))
+                icons.add(iconsIds.getResourceId(i, iconArrayId))
                 colors.add(colorsIds[i])
+                names.add(namesArray[i])
             }
         } finally {
             iconsIds.recycle()
@@ -104,10 +113,7 @@ class AnimationMenu: FrameLayout {
         menuXY[0] = menu_fab.x
         menuXY[1] = menu_fab.y
 
-        initButtons(context, icons, colors)
-
-
-
+        initButtons(context, icons, colors, names)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -147,20 +153,22 @@ class AnimationMenu: FrameLayout {
                 menuOpenAnimation()
             } else {
                 menuCloseAnimation()
+
             }
 
             animator.start()
         }
     }
 
-    private fun initButtons(context: Context, icons: List<Int>, colors: List<Int>) {
+    private fun initButtons(context: Context, icons: List<Int>, colors: List<Int>, names: List<String>) {
         val buttonsCount = Math.min(icons.size, colors.size)
         for (i in 0 until buttonsCount) {
             val button = FloatingActionButton(context)
             button.setImageResource(icons[i])
+            button.tag = names[i]
             button.backgroundTintList = ColorStateList.valueOf(colors[i])
             button.isClickable = true
-//            button.setOnClickListener(OnButtonClickListener())
+            button.setOnClickListener(OnButtonClickListener)
 //            button.setOnLongClickListener(OnButtonLongClickListener())
             button.scaleX = 0.8f
             button.scaleY = 0.8f
@@ -174,6 +182,10 @@ class AnimationMenu: FrameLayout {
         }
     }
 
+    private var OnButtonClickListener = View.OnClickListener {
+        this.onSubButtonClick.onClick(it.tag.toString())
+    }
+
 
 
     private fun menuOpenAnimation(): Animator {
@@ -185,12 +197,10 @@ class AnimationMenu: FrameLayout {
 
         val btnAnimator = ValueAnimator.ofFloat(0f, mDistance)
         btnAnimator.duration = 450
-        //btnAnimator.interpolator = OvershootInterpolator()
         btnAnimator.addUpdateListener {
             val value = it.animatedValue as Float
             val angle = 360f / mButtons.size
-            openButtons(menu_fab.x, menu_fab.y, angle, value)
-
+            setButtonsAnimation(menu_fab.x, menu_fab.y, angle, value)
         }
 
         val result = AnimatorSet()
@@ -202,9 +212,7 @@ class AnimationMenu: FrameLayout {
 
             override fun onAnimationEnd(animation: Animator?) {
                 isAnimating = false
-                for (view in mButtons) {
-                    Log.i(TAG, "open: ${view.id}: ${view.x}, ${view.y}")
-                }
+                isOpen = true
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -215,28 +223,29 @@ class AnimationMenu: FrameLayout {
 
             }
         })
-        isOpen = true
+
         return result
     }
 
     private fun menuCloseAnimation(): Animator {
+
+        val btnAnimator = ValueAnimator.ofFloat(mDistance, 0f)
+        btnAnimator.duration = DURATION
+        btnAnimator.addUpdateListener {
+            val value = it.animatedValue as Float
+            val angle = 360f / mButtons.size
+            setButtonsAnimation(menu_fab.x, menu_fab.y, angle, value)
+        }
+
         menu_fab.setImageResource(R.drawable.ic_menu)
         val y = menu_fab.translationY
         val animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
         animator.duration = DURATION
 
 
-        val btnAnimator = ValueAnimator.ofFloat(mDistance, 0f)
-        btnAnimator.duration = 450
-        btnAnimator.addUpdateListener {
-            val value = it.animatedValue as Float
-            val angle = 360f / mButtons.size
-            closeButtons(menu_fab.x, menu_fab.y, angle, value)
-            //Log.i(TAG,"value ${ it.animatedValue}")
-        }
 
         val result = AnimatorSet()
-        result.playTogether(animator, btnAnimator)
+        result.play(btnAnimator).before(animator)
         result.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {
                 isAnimating = true
@@ -244,9 +253,9 @@ class AnimationMenu: FrameLayout {
 
             override fun onAnimationEnd(animation: Animator?) {
                 isAnimating = false
-                for (view in mButtons) {
-                    Log.i(TAG, "close: ${view.id}: ${view.x}, ${view.y}")
-                }
+                isOpen = false
+                hideButtons()
+
             }
 
             override fun onAnimationCancel(animation: Animator?) {
@@ -257,11 +266,11 @@ class AnimationMenu: FrameLayout {
 
             }
         })
-        isOpen = false
+
         return result
     }
 
-    private fun openButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float) {
+    private fun setButtonsAnimation(centerX: Float, centerY: Float, angleStep: Float, offset: Float) {
         var i = 0
         val cnt = mButtons.size
         while (i < cnt) {
@@ -270,6 +279,7 @@ class AnimationMenu: FrameLayout {
             val x = Math.cos(Math.toRadians(angle.toDouble())).toFloat() * offset
             val y = Math.sin(Math.toRadians(angle.toDouble())).toFloat() * offset
             val button = mButtons[i]
+
             button.x = centerX + x
             button.y = centerY + y
             button.scaleX = 0.8f
@@ -278,21 +288,24 @@ class AnimationMenu: FrameLayout {
         }
     }
 
-    private fun closeButtons(centerX: Float, centerY: Float, angleStep: Float, offset: Float) {
 
+
+    private fun hideButtons() {
         var i = 0
         val cnt = mButtons.size
         while (i < cnt) {
-            val angle = angleStep * i - 90
-            val x = Math.cos(Math.toRadians(angle.toDouble())).toFloat() * offset
-            val y = Math.sin(Math.toRadians(angle.toDouble())).toFloat() * offset
-
             val button = mButtons[i]
-            button.x = centerX
-            button.y = centerY - END_POSITION
             button.scaleX = 0f
             button.scaleY = 0f
             i++
         }
+    }
+
+    fun setSubButtonClick(onSubButtonClick: OnSubButtonClick) {
+        this.onSubButtonClick = onSubButtonClick
+    }
+
+    interface OnSubButtonClick {
+        fun onClick(name: String)
     }
 }

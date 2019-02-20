@@ -3,7 +3,10 @@ package com.billy.animationmenudemo
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.animation_menu.*
+import org.jetbrains.anko.toast
 
 class MainActivity : AppCompatActivity() {
     private val TAG = javaClass.simpleName
@@ -12,16 +15,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        Log.i(TAG, "${Math.cos(Math.toRadians(72.0))}")
-//        var animationMenu = AnimationMenu1(this, menu_fab, ringView, object : AnimationMenu1.MenuListener{
-//            override fun menuExpand() {
-//
-//            }
-//
-//            override fun menuClosed() {
-//
-//            }
-//        })
+        animation_menu.setSubButtonClick(object : AnimationMenu.OnSubButtonClick {
+            override fun onClick(name: String) {
+                toast(name)
+            }
+        })
 
 
 

@@ -5,12 +5,13 @@
      xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/menu_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center|bottom"
-        app:backgroundTint="@color/colorPrimary"
-        android:src="@drawable/ic_menu"
-        android:layout_marginBottom="10dp"/>
+            android:id="@+id/menu_fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|bottom"
+            app:backgroundTint="@android:color/holo_blue_light"
+            android:src="@drawable/ic_menu"
+            android:elevation="10dp"
+            android:layout_marginBottom="10dp"/>
 
 </merge>

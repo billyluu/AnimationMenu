@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <array name="button_name">
+        <item>Book</item>
+        <item>Group</item>
+        <item>Home</item>
+        <item>Picture</item>
+        <item>Play</item>
+    </array>
+
     <array name="icons">
         <item>@drawable/ic_book</item>
         <item>@drawable/ic_group</item>
@@ -9,10 +17,12 @@
     </array>
 
     <array name="color">
-        <item>@android:color/holo_blue_light</item>
-        <item>@android:color/holo_blue_light</item>
-        <item>@android:color/holo_blue_light</item>
-        <item>@android:color/holo_blue_light</item>
-        <item>@android:color/holo_blue_light</item>
+        <item>#AAA</item>
+        <item>#AAA</item>
+        <item>#AAA</item>
+        <item>#AAA</item>
+        <item>#AAA</item>
     </array>
+
+
 </resources>
