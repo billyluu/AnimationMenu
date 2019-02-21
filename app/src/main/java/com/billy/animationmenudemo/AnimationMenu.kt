@@ -264,25 +264,6 @@ class AnimationMenu: FrameLayout {
 
             }
         })
-//        result.play(animator)
-//        result.addListener(object : Animator.AnimatorListener {
-//            override fun onAnimationStart(animation: Animator?) {
-//                isAnimating = true
-//            }
-//
-//            override fun onAnimationEnd(animation: Animator?) {
-//                isAnimating = false
-//                isOpen = false
-//            }
-//
-//            override fun onAnimationCancel(animation: Animator?) {
-//
-//            }
-//
-//            override fun onAnimationRepeat(animation: Animator?) {
-//
-//            }
-//        })
 
         return result
     }
