@@ -12,6 +12,7 @@
             app:backgroundTint="@android:color/holo_blue_light"
             android:src="@drawable/ic_menu"
             android:elevation="10dp"
+            android:translationZ="5dp"
             android:layout_marginBottom="10dp"/>
 
 </merge>

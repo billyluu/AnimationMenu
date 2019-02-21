@@ -169,7 +169,6 @@ class AnimationMenu: FrameLayout {
             button.backgroundTintList = ColorStateList.valueOf(colors[i])
             button.isClickable = true
             button.setOnClickListener(OnButtonClickListener)
-//            button.setOnLongClickListener(OnButtonLongClickListener())
             button.scaleX = 0.8f
             button.scaleY = 0.8f
             button.x = menuXY[0]
@@ -242,13 +241,12 @@ class AnimationMenu: FrameLayout {
         val animator = ObjectAnimator.ofFloat(menu_fab, "translationY", y, y + END_POSITION)
         animator.duration = DURATION
 
-
-
         val result = AnimatorSet()
         result.play(btnAnimator)
         result.addListener(object : Animator.AnimatorListener {
             override fun onAnimationStart(animation: Animator?) {
                 isAnimating = true
+
             }
 
             override fun onAnimationEnd(animation: Animator?) {
@@ -256,7 +254,6 @@ class AnimationMenu: FrameLayout {
                 isOpen = false
                 hideButtons()
                 animator.start()
-
             }
 
             override fun onAnimationCancel(animation: Animator?) {
