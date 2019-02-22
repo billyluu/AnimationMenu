@@ -17,11 +17,11 @@
     </array>
 
     <array name="color">
-        <item>#AAA</item>
-        <item>#AAA</item>
-        <item>#AAA</item>
-        <item>#AAA</item>
-        <item>#AAA</item>
+        <item>@color/gray</item>
+        <item>@color/gray</item>
+        <item>@color/gray</item>
+        <item>@color/gray</item>
+        <item>@color/gray</item>
     </array>
 
 

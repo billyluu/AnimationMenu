@@ -168,6 +168,7 @@ class AnimationMenu: FrameLayout {
             button.tag = names[i]
             button.backgroundTintList = ColorStateList.valueOf(colors[i])
             button.isClickable = true
+            button.elevation = -1f
             button.setOnClickListener(OnButtonClickListener)
             button.scaleX = 0.8f
             button.scaleY = 0.8f
